@@ -1,0 +1,24 @@
+services:
+  php:
+    build: ./
+    ports:
+      - 8080:80
+    environment:
+      - OTEL_PHP_AUTOLOAD_ENABLED=true
+      - OTEL_SERVICE_NAME=some-service
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_PROPAGATORS=jaeger
+      - OTEL_PHP_TRACES_PROCESSOR=simple
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    command: [ "--memory.max-traces", "10000", "--query.base-path", "/jaeger/ui" ]
+    ports:
+      - "16686:16686"
+      - "4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
